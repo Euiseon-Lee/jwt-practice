@@ -5,6 +5,7 @@ import com.example.jwt_practice.auth.dto.LoginRequest;
 import com.example.jwt_practice.auth.dto.SignupRequest;
 import com.example.jwt_practice.auth.dto.TokenResponse;
 import com.example.jwt_practice.auth.service.AuthService;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -40,6 +41,7 @@ public class AuthController {
 
     @PostMapping("/reissue")
     public ResponseEntity<AccessTokenResponse> reissue(
+            @Parameter(hidden = true)
             @CookieValue(name = REFRESH_COOKIE_NAME, required = false) String refreshToken
     ) {
         if (refreshToken == null) {
@@ -51,6 +53,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
+            @Parameter(hidden = true)
             @CookieValue(name = REFRESH_COOKIE_NAME, required = false) String refreshToken
     ) {
         authService.logout(refreshToken);
