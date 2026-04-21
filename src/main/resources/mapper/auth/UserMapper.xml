@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.jwt_practice.auth.dao.UserDao">
+    <select id="findByUserId" parameterType="String" resultType="User">
+        SELECT * FROM users WHERE login_id = #{loginId}
+    </select>
+
+    <select id="findById" parameterType="long" resultType="User">
+        SELECT * FROM users WHERE id = #{id}
+    </select>
+
+    <select id="existsByLoginId" parameterType="String" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM users WHERE login_id = #{loginId})
+    </select>
+
+    <insert id="save" parameterType="User">
+        INSERT INTO users (login_id, password, role)
+        VALUES (#{loginId}, #{password}, #{role})
+    </insert>
+</mapper>
