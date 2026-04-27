@@ -8,6 +8,7 @@ import com.example.jwt_practice.auth.exception.AuthErrorCode;
 import com.example.jwt_practice.auth.service.AuthService;
 import com.example.jwt_practice.common.exception.BusinessException;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -28,13 +29,13 @@ public class AuthController {
     private static final Duration REFRESH_COOKIE_MAX_AGE = Duration.ofDays(7);
 
     @PostMapping("/signup")
-    public ResponseEntity<Void> signup(@RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<Void> signup(@Valid @RequestBody SignupRequest signupRequest) {
         authService.signup(signupRequest);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AccessTokenResponse> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<AccessTokenResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         TokenResponse tokens = authService.login(loginRequest);
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokens.getRefreshToken()).toString())
