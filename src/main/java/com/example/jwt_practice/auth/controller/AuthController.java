@@ -4,7 +4,9 @@ import com.example.jwt_practice.auth.dto.AccessTokenResponse;
 import com.example.jwt_practice.auth.dto.LoginRequest;
 import com.example.jwt_practice.auth.dto.SignupRequest;
 import com.example.jwt_practice.auth.dto.TokenResponse;
+import com.example.jwt_practice.auth.exception.AuthErrorCode;
 import com.example.jwt_practice.auth.service.AuthService;
+import com.example.jwt_practice.common.exception.BusinessException;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -45,7 +47,7 @@ public class AuthController {
             @CookieValue(name = REFRESH_COOKIE_NAME, required = false) String refreshToken
     ) {
         if (refreshToken == null) {
-            throw new RuntimeException("Missing refresh token cookie.");
+            throw new BusinessException(AuthErrorCode.MISSING_REFRESH_TOKEN);
         }
         TokenResponse tokens = authService.reissue(refreshToken);
         return ResponseEntity.ok(new AccessTokenResponse(tokens.getAccessToken()));
