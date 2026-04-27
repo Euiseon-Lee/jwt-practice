@@ -199,10 +199,11 @@ C-2, C-3, D-1, D-2 (문서/운영 마무리)
 
 ## ✅ 최근 완료 (참고)
 
-- 2026-04 — `GlobalExceptionHandler` 도입 + `BusinessException` / `ErrorResponse` / `ErrorCode` 체계 정립
-- 2026-04 — `ErrorCode`를 interface로 분리하고 `AuthErrorCode` / `CommonErrorCode`로 도메인별 분산
-- 2026-04 — Swagger UI에서 쿠키 파라미터 입력칸 숨김 처리
-- 2026-04 — 중복 로그인 방지 (신규 RT 저장 전 기존 RT 삭제)
-- 2026-04 — 회원가입 엔드포인트 추가
-- 2026-04 — MyBatis `parameterType` 정합성 수정 (ClassCastException)
-- 2026-04 — `.gitignore` 보강 (`application-local.yaml`)
+- 2026-04-2* — `GlobalExceptionHandler` 도입 + `BusinessException` / `ErrorResponse` / `ErrorCode` 체계 정립
+- 2026-04-2* — `ErrorCode`를 interface로 분리하고 `AuthErrorCode` / `CommonErrorCode`로 도메인별 분산
+- 2026-04-2* — Swagger UI에서 쿠키 파라미터 입력칸 숨김 처리
+- 2026-04-2* — 중복 로그인 방지 (신규 RT 저장 전 기존 RT 삭제)
+- 2026-04-2* — 회원가입 엔드포인트 추가
+- 2026-04-2* — MyBatis `parameterType` 정합성 수정 (ClassCastException)
+- 2026-04-2* — `.gitignore` 보강 (`application-local.yaml`)
+- 2026-04-27 — A-1 필터단 보안 예외(401/403) 응답을 ErrorResponse 포맷으로 통일
