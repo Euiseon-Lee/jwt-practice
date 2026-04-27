@@ -34,10 +34,10 @@ JWT 학습 프로젝트의 향후 작업 목록.
 ---
 
 ### A-3. `@Valid` 검증 추가
-- [ ] `LoginRequest` 필드에 `@NotBlank`, `@Size` 등 제약 추가
-- [ ] `SignupRequest` 필드에 동일 처리
-- [ ] 컨트롤러 파라미터에 `@Valid` 추가
-- [ ] `build.gradle`에 `spring-boot-starter-validation` 의존성 확인
+- [x] `LoginRequest` 필드에 `@NotBlank`, `@Size` 등 제약 추가
+- [x] `SignupRequest` 필드에 동일 처리
+- [x] 컨트롤러 파라미터에 `@Valid` 추가
+- [x] `build.gradle`에 `spring-boot-starter-validation` 의존성 추가
 
 **배경**
 이미 `ControllerExceptionHandler`에 `MethodArgumentNotValidException` 핸들러를 만들어두었으나, 활용 시점이 없음. DTO에 제약 어노테이션을 붙이면 즉시 활성화.
@@ -206,4 +206,6 @@ C-2, C-3, D-1, D-2 (문서/운영 마무리)
 - 2026-04-2* — 회원가입 엔드포인트 추가
 - 2026-04-2* — MyBatis `parameterType` 정합성 수정 (ClassCastException)
 - 2026-04-2* — `.gitignore` 보강 (`application-local.yaml`)
-- 2026-04-27 — A-1 필터단 보안 예외(401/403) 응답을 ErrorResponse 포맷으로 통일
+- 2026-04-27 — [A-1] 필터단 보안 예외(401/403) 응답을 ErrorResponse 포맷으로 통일
+- 2026-04-27 - jjwt 라이브러리 0.12.3 → 0.12.6 업그레이드 (CVE-2024-31033 경고 해결)
+- 2026-04-27 — [A-3] LoginRequest/SignupRequest에 @Valid 검증 어노테이션 적용
