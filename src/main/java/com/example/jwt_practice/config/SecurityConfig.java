@@ -1,8 +1,9 @@
 package com.example.jwt_practice.config;
 
-import com.example.jwt_practice.jwt.JwtAuthenticationFilter;
-import com.example.jwt_practice.jwt.JwtProvider;
-import jakarta.servlet.http.HttpServletResponse;
+import com.example.jwt_practice.auth.security.JwtAccessDeniedHandler;
+import com.example.jwt_practice.auth.security.JwtAuthenticationEntryPoint;
+import com.example.jwt_practice.auth.security.JwtAuthenticationFilter;
+import com.example.jwt_practice.auth.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +22,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -28,7 +31,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) {
         http
                 // 1. CSRF, formLogin, httpBasic 비활성화
                 .csrf(AbstractHttpConfigurer::disable)
@@ -40,12 +43,13 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                .exceptionHandling(ex -> ex                   // 추가: 401 반환으로 고정
-                        .authenticationEntryPoint((req, res, e) ->
-                                res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+                // 3. 필터 단 보안 예외 → ErrorResponse JSON으로 통일
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(jwtAccessDeniedHandler)
                 )
 
-                // 3. URL 권한 설정
+                // 4. URL 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/auth/**"
@@ -60,7 +64,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                // 4. JWT 필터 등록
+                // 5. JWT 필터 등록
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider),
                         UsernamePasswordAuthenticationFilter.class

@@ -1,5 +1,6 @@
-package com.example.jwt_practice.jwt;
+package com.example.jwt_practice.auth.security;
 
+import com.example.jwt_practice.auth.exception.AuthErrorCode;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,6 +15,33 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * [Client] ── 요청 (Authorization: Bearer <token> 포함했다는 전제)
+ *    │
+ *    ▼
+ * [JwtAuthenticationFilter.doFilterInternal]
+ *    │  resolveToken(request)
+ *    │
+ *    ├─ ① 토큰 없음 (비로그인 요청)
+ *    │     → chain.doFilter() 그대로 통과 (메모 X)
+ *    │     → 비보호 자원이면 통과 / 보호 자원이면 ExceptionTranslationFilter가 EntryPoint 호출
+ *    │
+ *    ├─ ② 토큰 있음 + 검증 성공
+ *    │     → SecurityContext에 인증 정보 저장
+ *    │     → chain.doFilter() 통과 → 컨트롤러 도달
+ *    │
+ *    ├─ ③ 토큰 있음 + ExpiredJwtException
+ *    │     → request.setAttribute(ERROR_CODE_ATTRIBUTE, EXPIRED_TOKEN)  ← 메모
+ *    │     → SecurityContextHolder.clearContext()                       ← 안전장치
+ *    │     → chain.doFilter() 통과 (응답 직접 안 씀!)
+ *    │     → SecurityContext 비어 있음 → 보호 자원이면 EntryPoint가 메모 보고 401 응답
+ *    │
+ *    └─ ④ 토큰 있음 + 그 외 예외 (위조/형식오류)
+ *          → request.setAttribute(ERROR_CODE_ATTRIBUTE, INVALID_TOKEN)  ← 메모
+ *          → SecurityContextHolder.clearContext()
+ *          → chain.doFilter() 통과
+ *          → 보호 자원이면 EntryPoint가 메모 보고 401 응답
+ */
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -41,18 +69,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
         } catch (ExpiredJwtException e) {
-            // 만료된 토큰
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"error\": \"Expired token. Needed to reissue.\"}");
-            return;
-
+            // 만료된 토큰: 메모만 남기고 chain 통과 → JwtAuthenticationEntryPoint가 응답
+            request.setAttribute(JwtAuthenticationEntryPoint.ERROR_CODE_ATTRIBUTE, AuthErrorCode.EXPIRED_TOKEN);
+            SecurityContextHolder.clearContext();
         } catch (Exception e) {
-            // 위조된 토큰
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"error\": \"Invalid token.\"}");
-            return;
+            // 위조/형식오류 토큰: 메모만 남기고 chain 통과
+            request.setAttribute(JwtAuthenticationEntryPoint.ERROR_CODE_ATTRIBUTE, AuthErrorCode.INVALID_TOKEN);
+            SecurityContextHolder.clearContext();
         }
         filterChain.doFilter(request, response);
     }

@@ -7,7 +7,9 @@ import com.example.jwt_practice.auth.dto.SignupRequest;
 import com.example.jwt_practice.auth.dto.TokenResponse;
 import com.example.jwt_practice.auth.entity.RefreshToken;
 import com.example.jwt_practice.auth.entity.User;
-import com.example.jwt_practice.jwt.JwtProvider;
+import com.example.jwt_practice.auth.exception.AuthErrorCode;
+import com.example.jwt_practice.auth.security.JwtProvider;
+import com.example.jwt_practice.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,7 +28,7 @@ public class AuthService {
     // 회원가입
     public void signup(SignupRequest signupRequest) {
         if (userDao.existsByLoginId(signupRequest.getLoginId())) {
-            throw new RuntimeException("Already existing loginId.");
+            throw new BusinessException(AuthErrorCode.DUPLICATE_LOGIN_ID);
         }
         String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
         userDao.save(new User(signupRequest.getLoginId(), encodedPassword, "USER"));
@@ -37,11 +39,11 @@ public class AuthService {
 
         User user = userDao.findByUserId(loginRequest.getLoginId());
         if (user == null) {
-            throw new RuntimeException("Non-existent user.");
+            throw new BusinessException(AuthErrorCode.INVALID_CREDENTIALS);
         }
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Incorrect password.");
+            throw new BusinessException(AuthErrorCode.INVALID_CREDENTIALS);
         }
 
         String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getRole());
@@ -58,12 +60,12 @@ public class AuthService {
 
     public TokenResponse reissue (String refreshToken) {
         if(!jwtProvider.validateToken(refreshToken)) {
-            throw new RuntimeException("Invalid refresh token.");
+            throw new BusinessException(AuthErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         RefreshToken savedToken = refreshTokenDao.findByToken(refreshToken);
         if (savedToken == null) {
-            throw new RuntimeException("Non-existent refresh token.");
+            throw new BusinessException(AuthErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         User user = userDao.findById(savedToken.getUserId());
