@@ -9,10 +9,10 @@ JWT 학습 프로젝트의 향후 작업 목록.
 ## 🔧 카테고리 A — 백엔드 보강 (보안 / 완성도)
 
 ### A-1. AuthenticationEntryPoint / AccessDeniedHandler 도입
-- [ ] `JwtAuthenticationFilter`에서 발생하는 401·403 응답을 `ErrorResponse` 포맷으로 통일
-- [ ] `AuthenticationEntryPoint` 구현 (인증 실패 = 401)
-- [ ] `AccessDeniedHandler` 구현 (권한 부족 = 403)
-- [ ] `SecurityConfig`에 등록
+- [x] `JwtAuthenticationFilter`에서 발생하는 401·403 응답을 `ErrorResponse` 포맷으로 통일
+- [x] `AuthenticationEntryPoint` 구현 (인증 실패 = 401)
+- [x] `AccessDeniedHandler` 구현 (권한 부족 = 403)
+- [x] `SecurityConfig`에 등록
 
 **배경**
 현재 `ControllerExceptionHandler`는 `@RestControllerAdvice`로 동작하지만, **필터단(DispatcherServlet 앞)에서 발생한 예외는 잡지 못함**. 만료된 AT로 보호 API를 호출하면 빈 응답이 오거나 기본 스프링 보안 응답이 가서 응답 포맷이 들쭉날쭉.
