@@ -22,9 +22,9 @@ JWT 학습 프로젝트의 향후 작업 목록.
 ---
 
 ### A-2. Refresh Token Rotation
-- [ ] `/reissue` 호출 시 새 AT뿐 아니라 **새 RT**도 발급
-- [ ] 기존 RT는 DB에서 삭제 (또는 무효화 플래그)
-- [ ] 새 RT를 HttpOnly Cookie로 응답에 실어 보냄
+- [x] `/reissue` 호출 시 새 AT뿐 아니라 **새 RT**도 발급
+- [x] 기존 RT는 DB에서 삭제 (또는 무효화 플래그)
+- [x] 새 RT를 HttpOnly Cookie로 응답에 실어 보냄
 
 **배경**
 보안 표준은 **RT 사용 시마다 새 RT를 발급하고 기존 RT는 폐기**. RT 탈취 감지에 강해짐 (재사용 탐지 가능).
@@ -208,4 +208,6 @@ C-2, C-3, D-1, D-2 (문서/운영 마무리)
 - 2026-04-2* — `.gitignore` 보강 (`application-local.yaml`)
 - 2026-04-27 — [A-1] 필터단 보안 예외(401/403) 응답을 ErrorResponse 포맷으로 통일
 - 2026-04-27 - jjwt 라이브러리 0.12.3 → 0.12.6 업그레이드 (CVE-2024-31033 경고 해결)
-- 2026-04-27 — [A-3] LoginRequest/SignupRequest에 @Valid 검증 어노테이션 적용
+- 2026-04-27 — [A-3] LoginRequest/SignupRequest에 @Valid 검증 어노테이션 적용 
+- 2026-04-28 — [A-2] /reissue에 Refresh Token Rotation 적용 (새 RT 발급, 기존 RT 폐기, HttpOnly Cookie 첨부)
+- 2026-04-28 — loginId를 toLowerCase(Locale.ROOT)로 정규화 (DB collation case-insensitive 결함 보완)
