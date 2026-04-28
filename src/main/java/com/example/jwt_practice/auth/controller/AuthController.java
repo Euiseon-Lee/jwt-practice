@@ -51,7 +51,9 @@ public class AuthController {
             throw new BusinessException(AuthErrorCode.MISSING_REFRESH_TOKEN);
         }
         TokenResponse tokens = authService.reissue(refreshToken);
-        return ResponseEntity.ok(new AccessTokenResponse(tokens.getAccessToken()));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokens.getRefreshToken()).toString())
+                .body(new AccessTokenResponse(tokens.getAccessToken()));
     }
 
     @PostMapping("/logout")

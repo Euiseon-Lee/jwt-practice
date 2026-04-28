@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -27,17 +28,20 @@ public class AuthService {
 
     // 회원가입
     public void signup(SignupRequest signupRequest) {
-        if (userDao.existsByLoginId(signupRequest.getLoginId())) {
+        // loginId는 case-insensitive 정책: 저장/조회 모두 소문자로 정규화
+        String normalizedLoginId = signupRequest.getLoginId().toLowerCase(Locale.ROOT);
+        if (userDao.existsByLoginId(normalizedLoginId)) {
             throw new BusinessException(AuthErrorCode.DUPLICATE_LOGIN_ID);
         }
         String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
-        userDao.save(new User(signupRequest.getLoginId(), encodedPassword, "USER"));
+        userDao.save(new User(normalizedLoginId, encodedPassword, "USER"));
     }
 
     // 로그인 검증 및 토큰 생성
     public TokenResponse login(LoginRequest loginRequest) {
 
-        User user = userDao.findByUserId(loginRequest.getLoginId());
+        String normalizedLoginId = loginRequest.getLoginId().toLowerCase(Locale.ROOT);
+        User user = userDao.findByUserId(normalizedLoginId);
         if (user == null) {
             throw new BusinessException(AuthErrorCode.INVALID_CREDENTIALS);
         }
@@ -47,17 +51,17 @@ public class AuthService {
         }
 
         String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getRole());
-        String refreshToken = jwtProvider.generateRefreshToken(user.getId());
-
-        refreshTokenDao.deleteByUserId(user.getId());
-
-        RefreshToken refreshTokenEntity = new RefreshToken(
-                user.getId(), refreshToken, LocalDateTime.now().plusDays(7).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-        );
-        refreshTokenDao.save(refreshTokenEntity);
+        String refreshToken = rotateRefreshToken(user.getId());
         return new TokenResponse(accessToken, refreshToken);
     }
 
+    /** RT Rotation 적용: RT 사용 시마다 새 RT 발급 + 기존 RT는 DB에서 삭제.
+     *
+     * TODO: 재사용 탐지 강화 (옵션)
+     *  - RefreshToken 엔티티에 revoked 플래그 또는 family_id 추가
+     *  - 폐기된 RT가 다시 사용되면 해당 user의 모든 RT 일괄 무효화 (탈취 신호로 활용)
+     *  - 만료된 RT cleanup용 스케줄러 추가 (예: @Scheduled로 일 1회 만료 row 정리)
+     */
     public TokenResponse reissue (String refreshToken) {
         if(!jwtProvider.validateToken(refreshToken)) {
             throw new BusinessException(AuthErrorCode.INVALID_REFRESH_TOKEN);
@@ -70,8 +74,9 @@ public class AuthService {
 
         User user = userDao.findById(savedToken.getUserId());
         String newAccessToken = jwtProvider.generateAccessToken(user.getId(), user.getRole());
+        String newRefreshToken = rotateRefreshToken(user.getId());
 
-        return new TokenResponse(newAccessToken, refreshToken);
+        return new TokenResponse(newAccessToken, newRefreshToken);
     }
 
     public void logout (String refreshToken) {
@@ -83,5 +88,19 @@ public class AuthService {
             return;
         }
         refreshTokenDao.deleteByUserId(savedToken.getUserId());
+    }
+
+    /** 기존 RT를 폐기하고 새 RT를 발급/저장하여 반환.
+     *  login(중복 로그인 방지)과 reissue(RT Rotation) 둘 다 사용.
+     */
+    private String rotateRefreshToken(Long userId) {
+        String newRefreshToken = jwtProvider.generateRefreshToken(userId);
+        refreshTokenDao.deleteByUserId(userId);
+        refreshTokenDao.save(new RefreshToken(
+                userId,
+                newRefreshToken,
+                LocalDateTime.now().plusDays(7).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        ));
+        return newRefreshToken;
     }
 }
